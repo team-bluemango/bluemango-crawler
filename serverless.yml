@@ -1,0 +1,38 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: coffeemon
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: bluemango-crawler
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: bluemango-crawler
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-northeast-2
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sqs:ReceiveMessage"
+        - "sqs:DeleteMessage"
+        - "sqs:GetQueueAttributes"
+      Resource:
+        Fn::GetAtt:
+          - MyQueue
+          - Arn
+
+functions:
+  sqsHandler:
+    handler: handler.sqsHandler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MyQueue
+              - Arn
+
+resources:
+  Resources:
+    MyQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: my-queue
