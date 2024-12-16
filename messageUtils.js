@@ -76,3 +76,22 @@ async function sendMessage(messageBody) {
         console.error("Error sending message:", error);
     }
 }
+
+async function test() {
+    const messages = [
+        { "key": "test 1", "message": "msg 1" },
+        { "key": "test 2", "message": "msg 2" },
+        { "key": "test 3", "message": "msg 3" },
+        { "key": "test 4", "message": "msg 4" },
+        { "key": "test 5", "message": "msg 5" },
+        { "key": "test 6", "message": "msg 6" },
+        { "key": "test 7", "message": "msg 7" },
+        { "key": "test 8", "message": "msg 8" },
+        { "key": "test 9", "message": "msg 9" },
+        { "key": "test 10", "message": "msg 10" }
+    ]
+    ;
+    sendMessagesToSQS(messages)
+}
+
+test();

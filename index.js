@@ -1,5 +1,4 @@
-import { generateMessage, sendMessagesToSQSs } from "./messageUtils.js";
-;
+import { generateMessages, sendMessagesToSQS } from "./messageUtils.js";
 
 // Example usage
 const baseJson = {

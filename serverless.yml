@@ -21,8 +21,8 @@ provider:
           - Arn
 
 functions:
-  sqsHandler:
-    handler: handler.sqsHandler
+  lambdaHandler:
+    handler: handler.lambdaHandler
     events:
       - sqs:
           arn:
