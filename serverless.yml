@@ -1,38 +1,50 @@
-# "org" ensures this Service is used with the correct Serverless Framework Access Key.
-org: coffeemon
-# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
-app: bluemango-crawler
-# "service" is the name of this project. This will also be added to your AWS resource names.
-service: bluemango-crawler
+service: scheduler-service
 
 provider:
   name: aws
-  runtime: nodejs20.x
+  runtime: nodejs18.x
   region: ap-northeast-2
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "sqs:ReceiveMessage"
-        - "sqs:DeleteMessage"
-        - "sqs:GetQueueAttributes"
-      Resource:
-        Fn::GetAtt:
-          - MyQueue
-          - Arn
+  environment:
+    MONGODB_URI: ${env:MONGODB_URI} # MongoDB 연결 정보
+    QUEUE_URL:
+      Ref: ScheduleQueue # SQS Queue URL을 환경 변수로 전달
+    CUSTOM_AWS_REGION: ap-northeast-2
 
 functions:
-  lambdaHandler:
-    handler: handler.lambdaHandler
+  # API 비즈니스 로직 처리 핸들러
+  schedulerApi:
+    handler: src/handlers/scheduler.handler
+    events:
+      - httpApi:
+          path: /schedules
+          method: post
+      - httpApi:
+          path: /schedules
+          method: get
+
+  # SQS 메시지 처리 핸들러
+  sqsWorker:
+    handler: src/handlers/worker.handler
     events:
       - sqs:
           arn:
-            Fn::GetAtt:
-              - MyQueue
-              - Arn
+            Fn::GetAtt: [ScheduleQueue, Arn] # SQS Queue ARN 참조
+          batchSize: 5
 
 resources:
   Resources:
-    MyQueue:
+    # Primary SQS Queue
+    ScheduleQueue:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: my-queue
+        QueueName: schedule-queue
+        RedrivePolicy: # Dead Letter Queue 설정
+          deadLetterTargetArn:
+            Fn::GetAtt: [ScheduleDLQ, Arn] # DLQ ARN 참조
+          maxReceiveCount: 5 # 최대 재시도 횟수
+
+    # Dead Letter Queue (DLQ)
+    ScheduleDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: schedule-dlq
